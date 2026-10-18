@@ -12,11 +12,11 @@ const CONFIG = {
   memories: [
     { x: 0.445, y: 0.215, rot: -5, image: "assets/memories/memory-1.jpg" },
     { x: 0.585, y: 0.235, rot: 4,  image: "assets/memories/memory-2.jpg" },
-    { x: 0.500, y: 0.440, rot: -3, image: "assets/memories/memory-3.jpg", demo: "mascota" },
-    { x: 0.325, y: 0.425, rot: 5,  image: "assets/memories/memory-4.jpg", demo: "infancia" },
-    { x: 0.460, y: 0.600, rot: -4, image: "assets/memories/memory-5.jpg", demo: "familia" },
-    { x: 0.800, y: 0.410, rot: 3,  image: "assets/memories/memory-6.jpg", demo: "selfie" },
-    { x: 0.660, y: 0.470, rot: -5, image: "assets/memories/memory-7.jpg", demo: "juegos" }
+    { x: 0.500, y: 0.440, rot: -3, image: "assets/memories/memory-3.jpg" },
+    { x: 0.325, y: 0.425, rot: 5,  image: "assets/memories/memory-4.jpg" },
+    { x: 0.460, y: 0.600, rot: -4, image: "assets/memories/memory-5.jpg" },
+    { x: 0.800, y: 0.410, rot: 3,  image: "assets/memories/memory-6.jpg" },
+    { x: 0.660, y: 0.470, rot: -5, image: "assets/memories/memory-7.jpg" }
   ]
 };
 
