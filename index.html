@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tarjeta para mamá</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="oldplane" viewBox="-30 -26 60 52"><g fill="#e9dcc0" stroke="#3b2a18" stroke-width="1.2" stroke-linejoin="round"><path d="M-28-9h8v18h-8z" fill="#cdb78d"/><ellipse cx="0" cy="0" rx="23" ry="4.6" fill="#7a5a38"/><rect x="-7" y="-25" width="12" height="50" rx="2"/><rect x="21" y="-9" width="2" height="18" fill="#3b2a18"/><circle cx="5" cy="0" r="2.6" fill="#f6efdd"/></g></symbol>
+    <symbol id="jet" viewBox="-30 -28 60 56"><g fill="#f1ead8" stroke="#6b5a45" stroke-width="1" stroke-linejoin="round"><ellipse rx="26" ry="3.2"/><path d="M-2-3L-14-26h5L10-3zM-2 3L-14 26h5L10 3zM-22-2l-6-7h3l7 7zM-22 2l-6 7h3l7-7z"/></g></symbol>
+  </defs>
+</svg>
+
+<main id="stage" data-state="initial">
+  <section id="card" tabindex="0" role="button" aria-label="Abrir la tarjeta e iniciar el viaje">
+    <div id="cardDeco"></div>
+    <svg class="jet" aria-hidden="true"><use href="#jet"/></svg>
+    <div class="torn"><div class="tornText"><small>para ti</small><h1>Mamá</h1><p>un viaje de recuerdos</p></div></div>
+    <div class="stamp" aria-hidden="true"><span>AIR MAIL</span><b>✈</b><i>16</i></div>
+  </section>
+
+  <div id="hint" aria-hidden="true"><span>toca para volar</span></div>
+  <svg id="cardPlane" aria-hidden="true"><use href="#oldplane"/></svg>
+
+  <div id="world" aria-label="Mapa mundi antiguo">
+    <svg id="mapSvg" viewBox="0 0 1000 500" width="1000" height="500"></svg>
+    <svg id="trail" viewBox="0 0 1000 500" width="1000" height="500" aria-hidden="true"><path id="trailPath" fill="none"/></svg>
+    <div id="pols"></div>
+    <svg id="plane" viewBox="-30 -26 60 52" aria-label="Avión viajero" role="img"><use href="#oldplane"/></svg>
+  </div>
+
+  <div id="veil"></div>
+  <div id="sign" role="status" aria-live="polite"><div class="signPaper"><h2>Feliz 16° día de la madre</h2><p>Te amo mucho mami</p></div></div>
+
+  <button id="pause" type="button" aria-label="Pausar viaje" aria-pressed="false"><span class="ico"></span></button>
+</main>
+<script src="script.js"></script>
+</body>
+</html>
