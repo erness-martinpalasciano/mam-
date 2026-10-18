@@ -1,6 +1,6 @@
-TARJETA DÍA DE LA MADRE (v2)
-1) Descomprime y abre index.html en un navegador moderno (no necesita internet).
-2) Clic, toque o Espacio en la tarjeta para despegar.
-3) Computadora: flechas del teclado (el ratón no dirige). Móvil: desliza el dedo.
-4) Botón de pausa arriba a la derecha: muestra el mensaje; púlsalo otra vez para continuar.
-5) Fotos y ajustes: ver assets/README.txt y CONFIG en script.js.
+TARJETA DÍA DE LA MADRE (v3)
+1) Descomprime y abre index.html en un navegador moderno (sin internet).
+2) Clic, toque o Espacio sobre la postal para despegar.
+3) Computadora: flechas del teclado. Móvil: desliza el dedo. El mapa se repite sin fin en horizontal.
+4) Pausa (arriba a la derecha): muestra el mensaje; púlsala otra vez para continuar.
+5) Detalles de recursos y cómo reemplazar fotos o mapa: assets/README.txt

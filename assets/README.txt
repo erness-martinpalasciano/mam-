@@ -1,10 +1,10 @@
-RECURSOS
-Incluidos:
-  world-map.jpg        -> tu mapa político (convertido a RGB; resolución original 1280x1001, al hacer zoom se ve algo suave:
-                          si tienes una versión de mayor resolución con las mismas proporciones, reemplázala con el mismo nombre).
-Pendientes (los pones tú; si faltan, se dibuja una ilustración de DEMOSTRACIÓN, no son fotos reales):
-  memories/memory-1.jpg ... memory-7.jpg   -> Polaroid del mapa (cuadradas, ~600x600 px)
-  memories/card-1.jpg, card-2.jpg          -> Polaroid de la tarjeta inicial
-Posiciones, textos y tamaños: CONFIG al inicio de script.js (coordenadas normalizadas sobre el mapa).
-Hélice: el avión es un SVG (symbol "oldplane" en index.html) con la hélice como pieza aparte (<g class="prop">).
-Para un avión más realista, reemplaza ese symbol por tu recorte vista superior con el morro hacia la derecha.
+RECURSOS INCLUIDOS (no modificados salvo indicación)
+  postal.png            -> tu postal original, sin modificar (pantalla inicial completa, object-fit: contain).
+  plane.png             -> recorte del biplano de la esquina inferior izquierda de la postal (RGBA, resolución nativa 468x252).
+  world-map-tile.png    -> tu mapa político recortado dentro del marco (sin leyendas ni banderas), PNG sin compresión con pérdida y
+                           con costura horizontal suavizada (32 px de fusión). Resolución nativa: 1224x840 -> es la limitación real:
+                           con mucho zoom se ve suave. Para más nitidez, reemplázalo por una versión de mayor resolución con la
+                           misma proyección y ajusta CONFIG.map en script.js.
+  memories/memory-1.jpg, memory-2.jpg -> las dos fotos reales recortadas de la postal (ya usadas como Polaroid).
+PENDIENTES (opcionales): memories/memory-3.jpg ... memory-7.jpg. Si faltan, se dibuja una ilustración de DEMOSTRACIÓN.
+Las Polaroid no llevan texto. Para cambiar una foto edita solo su ruta "image" en CONFIG.memories (script.js).
