@@ -1,185 +1,222 @@
 /* ============ CONFIGURACIÓN (edita aquí) ============
-   Coordenadas x,y: unidades del mapa (1000 x 500). offset: dónde cae la Polaroid respecto al lugar.
-   Si "image" no existe, se dibuja una foto provisional automática (sin tocar la lógica). */
+   Todas las posiciones son NORMALIZADAS (0–1) sobre la imagen del mapa (assets/world-map.jpg),
+   así que siguen alineadas con su lugar aunque cambie la ventana. */
 const CONFIG = {
-  texts: { title: "Feliz 16° día de la madre", sub: "Te amo mucho mami" }, // el cartel está también en index.html
-  flight: { speed: 130, smoothing: 6, rotationSmoothing: 3.2, maxTurn: 2.4, start: [90, 430], startHeading: -0.5 },
-  transitionMs: 2400,
-  triggerRadius: 75,
-  polaroidWidth: 118,
-  landmarks: [
-    { id: "paris", name: "París",    kind: "eiffel",  x: 506, y: 140, image: "assets/polaroid-paris.jpg", caption: "", offset: [-95, -55], rotation: -5 },
-    { id: "rome",  name: "Roma",     kind: "dome",    x: 535, y: 160, image: "assets/polaroid-rome.jpg",  caption: "", offset: [62, -62],  rotation: 4 },
-    { id: "cairo", name: "Egipto",   kind: "pyramid", x: 586, y: 167, image: "assets/polaroid-egypt.jpg", caption: "", offset: [30, 98],   rotation: -3 },
-    { id: "ny",    name: "Nueva York", kind: "liberty", x: 294, y: 160, image: "assets/polaroid-newyork.jpg", caption: "", offset: [-70, -72], rotation: 5 },
-    { id: "rio",   name: "Río",      kind: "cristo",  x: 380, y: 315, image: "assets/polaroid-rio.jpg",   caption: "", offset: [98, 15],   rotation: -4 },
-    { id: "tokyo", name: "Japón",    kind: "fuji",    x: 886, y: 175, image: "assets/polaroid-japan.jpg", caption: "", offset: [-12, 98],  rotation: 3 }
+  map: { src: "assets/world-map.jpg", w: 1280, h: 1001, worldWidth: 2000,
+         crop: { x0: 0.012, y0: 0.036, x1: 0.988, y1: 0.872 } },   // zona navegable (sin leyendas ni banderas)
+  view: { fracX: 0.4, fracY: 0.32 },                               // fracción del mapa visible: menor = más zoom
+  flight: { start: [0.44, 0.30], startHeading: 0, cruise: 95, boost: 135, accel: 1.4, inertia: 2.2, turnRate: 2.1, turnSmoothing: 4 },
+  smoke: { offset: [-24, 0], rate: 20, max: 70 },                  // punto de emisión relativo al avión (unid. mundo)
+  transitionMs: 2400, polaroidWidth: 112,
+  hint: { keys: "usa las flechas ← ↑ → ↓ para volar", touch: "desliza el dedo para guiar el avión" },
+  landmarks: [  // ilustraciones recortadas de lugares (NO son fotos familiares)
+    { name: "París",      kind: "eiffel",  x: 0.506, y: 0.290 },
+    { name: "Roma",       kind: "dome",    x: 0.533, y: 0.322 },
+    { name: "Egipto",     kind: "pyramid", x: 0.584, y: 0.372 },
+    { name: "Nueva York", kind: "liberty", x: 0.327, y: 0.306 },
+    { name: "Río",        kind: "cristo",  x: 0.394, y: 0.556 },
+    { name: "Japón",      kind: "fuji",    x: 0.859, y: 0.322 }
   ],
-  cardPhotos: [ // fotos de la tarjeta inicial (posición en %)
-    { kind: "family", image: "assets/family-photo-1.jpg", cap: "mamá", css: "left:7%;top:30%;--w:clamp(80px,15vw,190px);--r:-6deg" },
-    { kind: "eiffel", image: "assets/family-photo-2.jpg", cap: "París", css: "left:60%;top:6%;--w:clamp(80px,14vw,180px);--r:5deg" },
-    { kind: "dome",   image: "assets/polaroid-rome.jpg",  cap: "Roma",  css: "right:7%;bottom:8%;--w:clamp(80px,16vw,200px);--r:-4deg" },
-    { kind: "fuji",   image: "assets/polaroid-japan.jpg", cap: "",      css: "left:38%;bottom:4%;--w:clamp(70px,11vw,140px);--r:3deg" }
+  memories: [   // Polaroid de recuerdos familiares. "image": tu foto; si no existe se dibuja una ilustración de demostración
+    { x: 0.445, y: 0.215, rot: -5, type: "abrazo",   caption: "un abrazo",     image: "assets/memories/memory-1.jpg" },
+    { x: 0.585, y: 0.235, rot: 4,  type: "casa",     caption: "en casa",       image: "assets/memories/memory-2.jpg" },
+    { x: 0.500, y: 0.440, rot: -3, type: "mascota",  caption: "mi compañero",  image: "assets/memories/memory-3.jpg" },
+    { x: 0.325, y: 0.425, rot: 5,  type: "infancia", caption: "de pequeño",    image: "assets/memories/memory-4.jpg" },
+    { x: 0.460, y: 0.620, rot: -4, type: "familia",  caption: "en familia",    image: "assets/memories/memory-5.jpg" },
+    { x: 0.800, y: 0.410, rot: 3,  type: "selfie",   caption: "juntos",        image: "assets/memories/memory-6.jpg" },
+    { x: 0.660, y: 0.470, rot: -5, type: "juegos",   caption: "día de juegos", image: "assets/memories/memory-7.jpg" }
+  ],
+  cardPhotos: [ // Polaroid de la tarjeta inicial (posición en %)
+    { type: "selfie", image: "assets/memories/card-1.jpg", cap: "mamá",  css: "right:6%;top:6%;--w:clamp(110px,22vw,300px);--r:4deg" },
+    { type: "abrazo", image: "assets/memories/card-2.jpg", cap: "juntos", css: "right:7%;bottom:6%;--w:clamp(110px,20vw,280px);--r:-6deg" }
   ]
 };
 
 (() => {
   "use strict";
   const $ = s => document.querySelector(s);
-  const NS = "http://www.w3.org/2000/svg";
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches, K = reduce ? 0.3 : 1;
-  const F = CONFIG.flight;
+  const M = CONFIG.map, F = CONFIG.flight, C = M.crop;
+  const WW = M.worldWidth, WH = WW * M.h / M.w;                    // el mundo mide WW x WH "unidades"
   const stage = $("#stage"), card = $("#card"), world = $("#world"), plane = $("#plane"), cardPlane = $("#cardPlane"),
-        pols = $("#pols"), pauseBtn = $("#pause"), trailPath = $("#trailPath"), hint = $("#hint");
+        pols = $("#pols"), pauseBtn = $("#pause"), trailPath = $("#trailPath"), hint = $("#hint"), fly = $("#flyHint"),
+        cv = $("#smoke"), ctx = cv.getContext("2d");
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v)), wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
+  const bx0 = C.x0 * WW, bx1 = C.x1 * WW, by0 = C.y0 * WH, by1 = C.y1 * WH; // límites del mundo navegable
 
-  /* ---------- Mapa vintage en SVG (continentes simplificados, lon/lat) ---------- */
-  const LAND = {
-    "NORTE AMÉRICA|105,95": "-168,66 -140,70 -95,72 -80,70 -62,60 -55,50 -67,44 -76,35 -81,25 -97,26 -97,18 -87,21 -83,10 -78,8 -92,15 -106,23 -115,30 -124,40 -125,49 -140,60",
-    "|": "-73,78 -40,83 -20,80 -22,70 -43,60 -55,68",
-    "SUDAMÉRICA|345,360": "-78,8 -62,11 -50,0 -35,-6 -40,-22 -48,-27 -58,-38 -65,-42 -68,-54 -74,-50 -72,-30 -70,-18 -81,-5",
-    "ASIA|740,110": "-10,36 -9,43 -1,46 -5,48 3,51 8,55 10,58 5,62 15,69 28,71 60,69 100,77 140,72 170,68 180,65 160,58 142,52 135,43 128,35 122,30 120,22 108,18 105,9 100,13 98,8 103,1 98,16 92,22 80,14 77,8 72,20 67,25 57,25 52,16 43,13 35,28 36,36 28,36 26,40 20,40 15,38 12,44 3,43 -5,36",
-    "ÁFRICA|560,300": "-17,21 -10,30 -5,36 10,37 32,31 43,12 51,12 40,-3 40,-15 33,-26 20,-35 14,-22 12,-5 9,4 -8,4 -17,14",
-    "OCEANÍA|870,380": "114,-22 122,-18 131,-12 142,-11 153,-26 150,-37 140,-38 130,-32 115,-34",
-    "||": "130,31 135,34 141,38 142,44 140,40 133,34",
-    "|||": "-5,50 1,51 -2,57 -5,58"
-  };
-  const pt = (lo, la) => ((lo + 180) * 1000 / 360).toFixed(1) + "," + ((90 - la) * 500 / 180).toFixed(1);
-  let m = '<g id="worldmap"><rect width="1000" height="500" fill="#e4d3ad"/>';
-  for (let lo = -180; lo <= 180; lo += 30) m += `<path d="M${pt(lo, 90)}L${pt(lo, -90)}" stroke="#a88b5e" stroke-width=".6" opacity=".5" fill="none"/>`;
-  for (let la = -60; la <= 60; la += 30) m += `<path d="M${pt(-180, la)}L${pt(180, la)}" stroke="#a88b5e" stroke-width=".6" opacity=".5" fill="none"/>`;
-  m += `<path d="M${pt(-180, 0)}L${pt(180, 0)}" stroke="#8c6a3e" stroke-width=".9" stroke-dasharray="2 4" fill="none"/>`;
-  for (const k in LAND) {
-    const p = LAND[k].split(" ").map(s => pt(...s.split(",").map(Number)));
-    m += `<path d="M${p.join("L")}Z" fill="#d3bb8a" stroke="#7a5a38" stroke-width="1.2" stroke-linejoin="round"/>`;
-    const lab = k.split("|"); if (lab[0]) m += `<text class="mapLabel" x="${lab[1].split(",")[0]}" y="${lab[1].split(",")[1]}">${lab[0]}</text>`;
-  }
-  m += `<text class="mapLabel" x="205" y="250" font-size="14">OCÉANO ATLÁNTICO</text><text class="mapLabel" x="50" y="330" font-size="14">PACÍFICO</text><text class="mapLabel" x="650" y="330" font-size="14">OCÉANO ÍNDICO</text>`;
-  m += `<rect x="3" y="3" width="994" height="494" fill="none" stroke="#6b4a2b" stroke-width="3"/></g>`;
-  $("#mapSvg").innerHTML = m;
+  /* ---------- Mundo: mapa + capas (todo comparte el mismo sistema) ---------- */
+  world.style.width = WW + "px"; world.style.height = WH + "px";
+  const mapImg = $("#mapImg"); mapImg.onerror = () => { mapImg.style.display = "none"; }; // sin imagen: queda el papel
+  const trail = $("#trail"); trail.setAttribute("viewBox", `0 0 ${WW} ${WH}`);
+  trailPath.style.stroke = "#a5453a"; trailPath.style.strokeLinecap = "round"; trailPath.style.opacity = ".9";
+  pols.style.cssText = `position:absolute;left:0;top:0;width:${WW}px;height:${WH}px`;
 
-  /* ---------- Siluetas de lugares y fotos provisionales ---------- */
+  /* ---------- Ilustraciones de lugares (siluetas recortadas) ---------- */
   const ICON = {
     eiffel: "M30 4l3 20 9 32h-6l-6-18-6 18h-6l9-32z", dome: "M8 56V38h44v18zM14 38a16 16 0 0132 0zM29 8h2v8h-2z",
     pyramid: "M3 56L30 12l27 44zM30 12l27 44H38z", liberty: "M24 56V38l6-4 6 4v18zM28 34l2-14 2 14zM34 24l8-14 2 2-6 14zM26 20h8v-4h-8z",
-    cristo: "M28 8h4v12h16v5H32v12l5 19H23l5-19V25H12v-5h16z", fuji: "M2 56L24 24l6-9 6 9 22 32z",
-    family: "M20 22a6 6 0 1012 0a6 6 0 10-12 0M34 26a5 5 0 1010 0a5 5 0 10-10 0M16 56V36q10-6 20 0v20zM34 56V38q8-4 14 0v18z"
+    cristo: "M28 8h4v12h16v5H32v12l5 19H23l5-19V25H12v-5h16z", fuji: "M2 56L24 24l6-9 6 9 22 32z"
   };
-  const iconSvg = (k, fill = "#6b4a2b") => `<svg viewBox="0 0 60 60"><path d="${ICON[k] || ICON.family}" fill="${fill}" stroke="#3b2a18" stroke-width="1.2" stroke-linejoin="round"/></svg>`;
-  const photo = k => "data:image/svg+xml," + encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ecd9a8"/><stop offset="1" stop-color="#c9a56d"/></linearGradient><radialGradient id="v"><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#3b2a18" stop-opacity=".45"/></radialGradient></defs><rect width="200" height="200" fill="url(#g)"/><circle cx="150" cy="55" r="22" fill="#f6efdd" opacity=".7"/><rect y="150" width="200" height="50" fill="#9c7a4c"/><g transform="translate(35 22) scale(2.2)"><path d="${ICON[k] || ICON.family}" fill="#5a3f26"/></g><rect width="200" height="200" fill="url(#v)"/></svg>`);
-  function polaroid(cfg, w) {
-    const el = document.createElement("div"); el.className = "pol";
-    const inn = document.createElement("div"); inn.className = "pol-in";
-    const img = new Image(); img.alt = "Recuerdo: " + (cfg.name || cfg.cap || "foto"); img.draggable = false;
-    img.onerror = () => { img.onerror = null; img.src = photo(cfg.kind); };
-    img.src = cfg.image || photo(cfg.kind);
-    const sp = document.createElement("span"); sp.textContent = cfg.caption || cfg.name || cfg.cap || "";
-    inn.append(img, sp); el.append(inn); if (w) el.style.setProperty("--w", w + "px");
-    return el;
+  CONFIG.landmarks.forEach((l, i) => {
+    const d = document.createElement("div"); d.className = "cutout"; d.style.left = l.x * WW + "px"; d.style.top = l.y * WH + "px";
+    d.innerHTML = `<div class="fl" style="animation-delay:${-i * 1.3}s"><svg viewBox="0 0 60 60"><path d="${ICON[l.kind]}" fill="#f1e6c8" stroke="#3b2a18" stroke-width="2.2" stroke-linejoin="round"/></svg></div><i>${l.name}</i>`;
+    pols.append(d);
+  });
+
+  /* ---------- Fotos familiares provisionales (ilustraciones de demostración) ---------- */
+  const person = (x, y, s, sk, hr, sh) => `<g transform="translate(${x} ${y}) scale(${s})"><ellipse cy="64" rx="36" ry="30" fill="${sh}"/><circle r="25" fill="${sk}"/><path d="M-26-2a26 26 0 0152 0q-13-13-26-10-13-3-26 10z" fill="${hr}"/><circle cx="-8" cy="3" r="2.4" fill="#3b2a18"/><circle cx="8" cy="3" r="2.4" fill="#3b2a18"/><path d="M-10 12q10 9 20 0" stroke="#7a3b2a" fill="none" stroke-width="2.6" stroke-linecap="round"/></g>`;
+  const dog = (x, y) => `<g transform="translate(${x} ${y})"><ellipse cy="40" rx="30" ry="20" fill="#e9e0cc"/><circle r="22" fill="#f3ecda"/><ellipse cx="-17" cy="-4" rx="7" ry="14" fill="#d9c39a" transform="rotate(20 -17 -4)"/><circle cx="-6" cy="-2" r="2.6" fill="#3b2a18"/><circle cx="9" cy="-2" r="2.6" fill="#3b2a18"/><ellipse cx="3" cy="8" rx="5" ry="3.5" fill="#3b2a18"/></g>`;
+  const SK = "#e0b48c", SK2 = "#c99669", DK = "#3a2a20", BR = "#6b4528", RD = "#8a4a32";
+  const SCENE = {
+    abrazo: person(78, 96, 1.15, SK, DK, "#c9d4e0") + person(128, 112, .85, SK2, BR, "#e3c25a"),
+    casa: `<rect x="120" y="20" width="60" height="70" fill="#e9dcc0" stroke="#8a6a44" stroke-width="4"/>` + person(62, 110, 1, SK, RD, "#a8b8a0") + person(130, 126, .7, SK2, DK, "#c9d4e0"),
+    mascota: person(70, 100, 1.1, SK, RD, "#b9a8c8") + dog(140, 124),
+    infancia: person(100, 118, 1.55, SK2, BR, "#e3c25a") + `<ellipse cx="160" cy="46" rx="14" ry="18" fill="#a5453a"/><path d="M160 64q-4 30-30 40" stroke="#3b2a18" fill="none"/>`,
+    familia: person(55, 110, .95, SK, DK, "#c9d4e0") + person(100, 96, 1.05, SK2, RD, "#e3c25a") + person(148, 114, .8, SK, BR, "#a8b8a0"),
+    selfie: person(66, 90, 1.25, SK, DK, "#c9d4e0") + person(132, 108, 1, SK2, RD, "#e9e0cc") + dog(165, 150),
+    juegos: person(70, 112, .95, SK, RD, "#a8b8a0") + person(135, 126, .75, SK2, BR, "#e3c25a") + `<circle cx="104" cy="170" r="14" fill="#a5453a"/>`
+  };
+  const photo = t => "data:image/svg+xml," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e8cf9e"/><stop offset="1" stop-color="#b98f5a"/></linearGradient><radialGradient id="v"><stop offset=".55" stop-opacity="0"/><stop offset="1" stop-color="#3b2a18" stop-opacity=".5"/></radialGradient></defs><rect width="200" height="200" fill="url(#g)"/>${SCENE[t] || SCENE.familia}<rect width="200" height="200" fill="url(#v)"/></svg>`);
+  function polaroid(c, w) {
+    const el = document.createElement("div"); el.className = "pol"; if (w) el.style.setProperty("--w", w + "px");
+    const inn = document.createElement("div"); inn.className = "pol-in"; inn.style.setProperty("--r", (c.rot || 0) + "deg");
+    const img = new Image(); img.alt = "Recuerdo: " + (c.caption || c.cap || "foto familiar"); img.draggable = false;
+    img.onerror = () => { img.onerror = null; img.src = photo(c.type); };
+    img.src = c.image || photo(c.type);
+    const sp = document.createElement("span"); sp.textContent = c.caption || c.cap || "";
+    inn.append(img, sp); el.append(inn); return el;
   }
+  CONFIG.memories.forEach((c, i) => {
+    const w = c.size || CONFIG.polaroidWidth, p = polaroid(c, w);
+    p.style.left = c.x * WW - w / 2 + "px"; p.style.top = c.y * WH - w * .62 + "px"; p.firstChild.style.animationDelay = -i * 1.7 + "s"; pols.append(p);
+  });
 
-  /* ---------- Tarjeta inicial (collage estático) ---------- */
+  /* ---------- Tarjeta inicial ---------- */
   const deco = $("#cardDeco");
-  CONFIG.cardPhotos.forEach(c => { const p = polaroid(c); p.style.cssText += c.css; p.firstChild.style.animation = "none"; deco.append(p); });
-  [["left:30%;top:6%;width:clamp(90px,14vw,190px);aspect-ratio:1.4;transform:rotate(-4deg)", "300 90 300 210"],
-   ["right:5%;top:42%;width:clamp(70px,11vw,150px);aspect-ratio:1;transform:rotate(6deg)", "700 120 220 220"]].forEach(([css, vb]) => {
-    const d = document.createElement("div"); d.className = "cut patch"; d.style.cssText = css;
-    d.innerHTML = `<svg viewBox="${vb}" preserveAspectRatio="xMidYMid slice"><use href="#worldmap"/></svg>`; deco.append(d);
-  });
-  [["eiffel", "left:24%;bottom:6%;width:clamp(40px,7vw,90px)"], ["dome", "left:2%;top:52%;width:clamp(40px,6vw,80px)"]].forEach(([k, css]) => {
-    const d = document.createElement("div"); d.className = "cut"; d.style.cssText = css; d.innerHTML = iconSvg(k, "#8a6a44"); deco.append(d);
+  CONFIG.cardPhotos.forEach(c => { const p = polaroid({ ...c, rot: 0 }); p.style.cssText += c.css; p.firstChild.style.transform = "rotate(var(--r))"; p.firstChild.style.setProperty("--r", c.css.match(/--r:(-?\d+deg)/)[1]); deco.append(p); });
+  [["left:2%;bottom:3%;width:clamp(120px,28vw,380px);height:clamp(90px,19vw,260px)", "20 130 360 220"], ["left:30%;bottom:0;width:clamp(120px,26vw,360px);height:clamp(70px,14vw,200px)", "560 150 300 150"]].forEach(([css, vb], i) => {
+    const d = document.createElement("div"); d.className = "cut patch"; d.style.cssText = css + (i ? ";border-bottom:0" : ""); d.style.zIndex = i ? 1 : 0;
+    d.innerHTML = `<img src="${M.src}" alt="" style="width:100%;height:100%;object-fit:cover;object-position:${i ? "60% 40%" : "5% 60%"};filter:sepia(.3) saturate(.85)">`; deco.append(d);
   });
 
-  /* ---------- Lugares en el mapa ---------- */
-  const marks = CONFIG.landmarks.map(l => {
-    const ic = document.createElement("div"); ic.className = "place"; ic.style.cssText = `left:${l.x}px;top:${l.y}px`; ic.innerHTML = iconSvg(l.kind);
-    const nm = document.createElement("div"); nm.className = "placeName"; nm.style.cssText = `left:${l.x}px;top:${l.y}px`; nm.textContent = l.name;
-    pols.append(ic, nm); return { ...l, done: false };
-  });
-
-  /* ---------- Estado y vuelo ---------- */
-  let state = "initial", vw = 0, vh = 0, s = 1, cx = 0, cy = 0, raf = 0, last = 0, hasPtr = false;
-  const P = { x: F.start[0], y: F.start[1], a: F.startHeading }, T = { x: P.x + 100, y: P.y }, ptr = { x: 0, y: 0 };
-  let trail = `M${P.x} ${P.y}`, lastPt = { x: P.x, y: P.y };
+  /* ---------- Estado, cámara y vuelo ---------- */
+  let state = "initial", vw = 0, vh = 0, s = 1, cx = 0, cy = 0, raf = 0, last = 0, dpr = 1, hintShown = false;
+  const P = { x: F.start[0] * WW, y: F.start[1] * WH, a: F.startHeading, ang: F.startHeading, vx: 0, vy: 0, sp: 0 };
+  const keys = new Set(), touch = { id: null, x: 0, y: 0 };
+  let trail_d = `M${P.x.toFixed(1)} ${P.y.toFixed(1)}`, lastPt = { x: P.x, y: P.y };
   const setState = n => { state = n; stage.dataset.state = n; };
-  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
-  const wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
 
   function resize() {
-    vw = innerWidth; vh = innerHeight; s = Math.max(vw, 2 * vh) / 1000;
-    cam(true); draw();
+    vw = innerWidth; vh = innerHeight; dpr = Math.min(devicePixelRatio || 1, 2);
+    s = Math.max(vw / (CONFIG.view.fracX * WW), vh / (CONFIG.view.fracY * WH), vw / ((C.x1 - C.x0) * WW), vh / ((C.y1 - C.y0) * WH));
+    cv.width = vw * dpr; cv.height = vh * dpr; camera(0, true); draw(); drawSmoke();
   }
-  function cam(snap, dt = 0) {
-    const tx = clamp(P.x * s - vw / 2, 0, 1000 * s - vw), ty = clamp(P.y * s - vh / 2, 0, 500 * s - vh), k = snap ? 1 : 1 - Math.exp(-3 * dt);
+  function camera(dt, snap) {
+    const lx = P.x + P.vx * .6, ly = P.y + P.vy * .6;                // la cámara mira un poco por delante del avión
+    const tx = clamp(lx * s - vw / 2, bx0 * s, bx1 * s - vw), ty = clamp(ly * s - vh / 2, by0 * s, by1 * s - vh), k = snap ? 1 : 1 - Math.exp(-2.5 * dt);
     cx += (tx - cx) * k; cy += (ty - cy) * k;
   }
   function draw() {
     world.style.transform = `translate3d(${-cx}px,${-cy}px,0) scale(${s})`;
-    plane.style.transform = `translate(${P.x}px,${P.y}px) rotate(${P.a}rad)`;
+    plane.style.transform = `translate(${P.x}px,${P.y}px) rotate(${P.ang}rad)`;
   }
 
-  function step(dt) {
-    let tx, ty;
-    if (hasPtr) { tx = (ptr.x + cx) / s; ty = (ptr.y + cy) / s; }
-    else { const n = marks.find(l => !l.done) || { x: 500 + 350 * Math.cos(P.a + 1), y: 250 + 150 * Math.sin(P.a + 1) }; tx = n.x; ty = n.y; }
-    if (P.x < 25 || P.x > 975 || P.y < 25 || P.y > 475) { tx = 500; ty = 250; }
-    const k = 1 - Math.exp(-F.smoothing * dt); T.x += (tx - T.x) * k; T.y += (ty - T.y) * k;
-    if (Math.hypot(T.x - P.x, T.y - P.y) > 25) {
-      const d = wrap(Math.atan2(T.y - P.y, T.x - P.x) - P.a), mt = F.maxTurn * dt;
-      P.a = wrap(P.a + clamp(d * (1 - Math.exp(-F.rotationSmoothing * dt)), -mt, mt));
-    }
-    P.x = clamp(P.x + Math.cos(P.a) * F.speed * dt, 4, 996); P.y = clamp(P.y + Math.sin(P.a) * F.speed * dt, 4, 496);
-    if (Math.hypot(P.x - lastPt.x, P.y - lastPt.y) > 9) { lastPt = { x: P.x, y: P.y }; trail += `L${P.x.toFixed(1)} ${P.y.toFixed(1)}`; trailPath.setAttribute("d", trail); }
-    for (const l of marks) if (!l.done && Math.hypot(P.x - l.x, P.y - l.y) < CONFIG.triggerRadius) reveal(l);
-    cam(false, dt);
+  /* Humo: pool fijo, partículas en coordenadas del mundo */
+  const spr = document.createElement("canvas"); spr.width = spr.height = 64;
+  { const g = spr.getContext("2d"), r = g.createRadialGradient(32, 32, 0, 32, 32, 32); r.addColorStop(0, "rgba(236,230,216,.95)"); r.addColorStop(.5, "rgba(222,214,198,.5)"); r.addColorStop(1, "rgba(215,205,188,0)"); g.fillStyle = r; g.fillRect(0, 0, 64, 64); }
+  const pool = Array.from({ length: CONFIG.smoke.max }, () => ({ on: false, x: 0, y: 0, vx: 0, vy: 0, age: 0, life: 1, s0: 5 }));
+  let emit = 0;
+  function spawn() {
+    const p = pool.find(q => !q.on); if (!p) return; const o = CONFIG.smoke.offset, c = Math.cos(P.ang), n = Math.sin(P.ang);
+    p.on = true; p.x = P.x + o[0] * c - o[1] * n; p.y = P.y + o[0] * n + o[1] * c; p.vx = -c * 8 + (Math.random() - .5) * 10; p.vy = -n * 8 + (Math.random() - .5) * 10;
+    p.age = 0; p.life = 1.5 + Math.random() * .8; p.s0 = 4 + Math.random() * 3;
   }
-  function reveal(l) {
-    l.done = true; const w = l.size || CONFIG.polaroidWidth, p = polaroid(l, w);
-    p.style.left = (l.x + l.offset[0] - w / 2) + "px"; p.style.top = (l.y + l.offset[1] - w * .62) + "px";
-    p.firstChild.style.setProperty("--r", (l.rotation || 0) + "deg"); pols.append(p);
+  function smokeStep(dt) {
+    emit += CONFIG.smoke.rate * dt * Math.min(1, P.sp / F.cruise); while (emit >= 1) { spawn(); emit--; }
+    for (const p of pool) if (p.on) { p.age += dt; if (p.age >= p.life) p.on = false; else { p.x += p.vx * dt; p.y += p.vy * dt; } }
+  }
+  function drawSmoke() {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, vw, vh);
+    for (const p of pool) if (p.on) { const t = p.age / p.life, r = (p.s0 + t * 16) * s; ctx.globalAlpha = .38 * Math.pow(1 - t, 1.3); ctx.drawImage(spr, p.x * s - cx - r, p.y * s - cy - r, r * 2, r * 2); }
+    ctx.globalAlpha = 1;
+  }
+
+  /* Entrada: flechas (teclado) o dedo (táctil). El ratón NO dirige el avión. */
+  function input() {
+    let ix = (keys.has("ArrowRight") ? 1 : 0) - (keys.has("ArrowLeft") ? 1 : 0), iy = (keys.has("ArrowDown") ? 1 : 0) - (keys.has("ArrowUp") ? 1 : 0);
+    if (touch.id !== null) { const dx = touch.x - (P.x * s - cx), dy = touch.y - (P.y * s - cy); if (Math.hypot(dx, dy) > 40) { ix = dx; iy = dy; } }
+    const l = Math.hypot(ix, iy); return l ? [ix / l, iy / l] : null;           // normalizado: la diagonal no acelera más
+  }
+  function step(dt) {
+    const inp = input();
+    if (inp) {
+      const d = wrap(Math.atan2(inp[1], inp[0]) - P.a), mt = F.turnRate * dt;
+      P.a = wrap(P.a + clamp(d * (1 - Math.exp(-F.turnSmoothing * dt)), -mt, mt));
+      if (!hintShown) { hintShown = true; fly.classList.remove("on"); }
+    } else if (P.x < bx0 + 60 || P.x > bx1 - 60 || P.y < by0 + 60 || P.y > by1 - 60) {   // cerca del borde: vira suavemente hacia dentro
+      const d = wrap(Math.atan2((by0 + by1) / 2 - P.y, (bx0 + bx1) / 2 - P.x) - P.a); P.a = wrap(P.a + clamp(d * dt * 1.5, -F.turnRate * dt * .6, F.turnRate * dt * .6));
+    }
+    P.sp += ((inp ? F.boost : F.cruise) - P.sp) * (1 - Math.exp(-F.accel * dt));
+    const k = 1 - Math.exp(-F.inertia * dt);                                   // inercia: la velocidad real persigue a la deseada
+    P.vx += (Math.cos(P.a) * P.sp - P.vx) * k; P.vy += (Math.sin(P.a) * P.sp - P.vy) * k;
+    P.x = clamp(P.x + P.vx * dt, bx0, bx1); P.y = clamp(P.y + P.vy * dt, by0, by1);
+    if (Math.hypot(P.vx, P.vy) > 8) P.ang = wrap(P.ang + wrap(Math.atan2(P.vy, P.vx) - P.ang) * (1 - Math.exp(-10 * dt)));
+    if (Math.hypot(P.x - lastPt.x, P.y - lastPt.y) > 10) { lastPt = { x: P.x, y: P.y }; trail_d += `L${P.x.toFixed(1)} ${P.y.toFixed(1)}`; trailPath.setAttribute("d", trail_d); }
+    smokeStep(dt); camera(dt);
   }
   function loop(now) {
     if (state !== "flying") return;
-    const dt = last ? Math.min((now - last) / 1000, 0.05) : 0; last = now;
-    step(dt); draw(); raf = requestAnimationFrame(loop);
+    const dt = last ? Math.min((now - last) / 1000, .05) : 0; last = now;
+    step(dt); draw(); drawSmoke(); raf = requestAnimationFrame(loop);
   }
-  function startLoop() { last = 0; cancelAnimationFrame(raf); raf = requestAnimationFrame(loop); }
+  const startLoop = () => { last = 0; cancelAnimationFrame(raf); raf = requestAnimationFrame(loop); };
 
   /* ---------- Transición tarjeta → mapa ---------- */
   function start() {
     if (state !== "initial") return;
     setState("transitioning"); hint.style.opacity = 0; card.blur();
-    const r = cardPlane.getBoundingClientRect(), sx = P.x * s - cx, sy = P.y * s - cy;
-    const dx = sx - (r.left + r.width / 2), dy = sy - (r.top + r.height / 2), sc = (44 * s) / r.width, D = CONFIG.transitionMs * K;
+    const r = cardPlane.getBoundingClientRect(), sx = P.x * s - cx, sy = P.y * s - cy, D = CONFIG.transitionMs * K;
+    const dx = sx - (r.left + r.width / 2), dy = sy - (r.top + r.height / 2), sc = (56 * s) / r.width;
     world.style.transition = `opacity ${D * .7}ms ease ${D * .25}ms`; world.style.opacity = 1;
-    card.animate([{ opacity: 1, transform: "scale(1)" }, { opacity: 0, transform: "scale(1.05)" }], { duration: D * .7, delay: D * .3, fill: "forwards", easing: "ease-in-out" });
-    const a = cardPlane.animate([
+    card.animate([{ opacity: 1, transform: "scale(1)" }, { opacity: 0, transform: "scale(1.06)" }], { duration: D * .75, delay: D * .25, fill: "forwards", easing: "ease-in-out" });
+    cardPlane.animate([
       { transform: "translate(0,0) rotate(-28deg) scale(1)" },
-      { transform: `translate(${dx * .25}px,${dy * .1 - 30}px) rotate(-34deg) scale(1.08)`, offset: .3 },
+      { transform: `translate(${dx * .3}px,${dy * .1 - 30}px) rotate(-34deg) scale(1.1)`, offset: .3 },
       { transform: `translate(${dx}px,${dy}px) rotate(${F.startHeading}rad) scale(${sc})` }
-    ], { duration: D, easing: "cubic-bezier(.45,0,.3,1)", fill: "forwards" });
-    a.finished.then(() => { plane.style.opacity = 1; cardPlane.style.display = "none"; card.style.display = hint.style.display = "none"; setState("flying"); startLoop(); });
+    ], { duration: D, easing: "cubic-bezier(.45,0,.3,1)", fill: "forwards" }).finished.then(() => {
+      plane.style.opacity = 1; cardPlane.style.display = "none"; card.style.display = hint.style.display = "none";
+      P.sp = F.cruise * .6; P.vx = Math.cos(P.a) * P.sp; P.vy = Math.sin(P.a) * P.sp;
+      fly.textContent = matchMedia("(pointer:coarse)").matches ? CONFIG.hint.touch : CONFIG.hint.keys; fly.classList.add("on"); setTimeout(() => fly.classList.remove("on"), 8000);
+      setState("flying"); startLoop();
+    });
   }
 
   /* ---------- Pausa ---------- */
   function togglePause() {
-    if (state === "flying") { cancelAnimationFrame(raf); setState("paused"); pauseBtn.setAttribute("aria-pressed", "true"); pauseBtn.setAttribute("aria-label", "Reanudar viaje"); }
+    if (state === "flying") { cancelAnimationFrame(raf); keys.clear(); touch.id = null; setState("paused"); pauseBtn.setAttribute("aria-pressed", "true"); pauseBtn.setAttribute("aria-label", "Reanudar viaje"); }
     else if (state === "paused") { setState("flying"); pauseBtn.setAttribute("aria-pressed", "false"); pauseBtn.setAttribute("aria-label", "Pausar viaje"); startLoop(); }
   }
 
   /* ---------- Eventos ---------- */
-  stage.addEventListener("pointerdown", e => { if (e.target.closest("#pause")) return; if (state === "initial") start(); else if (state === "flying") { ptr.x = e.clientX; ptr.y = e.clientY; hasPtr = true; } });
-  stage.addEventListener("pointermove", e => { if (state === "flying" && !e.target.closest("#pause")) { ptr.x = e.clientX; ptr.y = e.clientY; hasPtr = true; } });
+  stage.addEventListener("pointerdown", e => {
+    if (e.target.closest("#pause")) return;
+    if (state === "initial") start();
+    else if (state === "flying" && e.pointerType === "touch") { touch.id = e.pointerId; touch.x = e.clientX; touch.y = e.clientY; }
+  });
+  stage.addEventListener("pointermove", e => { if (e.pointerId === touch.id) { touch.x = e.clientX; touch.y = e.clientY; } });
+  ["pointerup", "pointercancel"].forEach(t => addEventListener(t, e => { if (e.pointerId === touch.id) touch.id = null; }));
   pauseBtn.addEventListener("pointerdown", e => e.stopPropagation());
   pauseBtn.addEventListener("click", e => { e.stopPropagation(); togglePause(); });
   card.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); start(); } });
+  const isForm = t => t && t.closest && t.closest("input,textarea,select,[contenteditable='true']");
   document.addEventListener("keydown", e => {
-    if (e.code !== "Space" || e.repeat) return;
-    if (e.target.closest && e.target.closest("button")) return; // el botón maneja su propio Espacio
-    e.preventDefault(); if (state === "initial") start();
+    if (isForm(e.target)) return;
+    if (e.code === "Space") { if (e.target.closest && e.target.closest("button")) return; e.preventDefault(); if (state === "initial") start(); return; }
+    if (e.key.startsWith("Arrow") && state === "flying") { e.preventDefault(); keys.add(e.key); }
   });
+  document.addEventListener("keyup", e => keys.delete(e.key));
+  addEventListener("blur", () => { keys.clear(); touch.id = null; });
+  document.addEventListener("visibilitychange", () => { if (document.hidden) { keys.clear(); if (state === "flying") togglePause(); } });
   addEventListener("resize", resize);
-  document.addEventListener("visibilitychange", () => { if (document.hidden && state === "flying") togglePause(); });
-
   resize();
 })();

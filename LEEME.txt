@@ -1,6 +1,6 @@
-TARJETA DÍA DE LA MADRE
-1) Descomprime la carpeta y abre index.html en Chrome, Firefox, Safari o Edge. No necesita internet.
-2) Toca/clic en la tarjeta o pulsa Espacio para despegar. Mueve el cursor o el dedo para guiar el avión.
-3) El botón de pausa (arriba a la derecha) muestra el mensaje; púlsalo otra vez para continuar.
-4) Fotos: copia tus imágenes a assets/ con los nombres de assets/README.txt, o cambia las rutas en CONFIG (script.js).
-5) Ajustes: velocidad de vuelo, giro, lugares, tamaño de Polaroid y duración de la transición están en CONFIG.
+TARJETA DÍA DE LA MADRE (v2)
+1) Descomprime y abre index.html en un navegador moderno (no necesita internet).
+2) Clic, toque o Espacio en la tarjeta para despegar.
+3) Computadora: flechas del teclado (el ratón no dirige). Móvil: desliza el dedo.
+4) Botón de pausa arriba a la derecha: muestra el mensaje; púlsalo otra vez para continuar.
+5) Fotos y ajustes: ver assets/README.txt y CONFIG en script.js.
